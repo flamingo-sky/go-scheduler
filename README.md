@@ -1,7 +1,6 @@
 # go-scheduler
 a go scheduler
 
-依赖于 
-cron: https://github.com/robfig/cron
+cron: https://github.com/robfig/cron <br>
 drumstick: https://github.com/openex27/drumstick 
-算法整合，用一个协程维护所有策略
+提供策略开始时间，策略间隔时间
