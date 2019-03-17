@@ -39,7 +39,7 @@ type Entry struct {
 	setStartTime time.Time
 
 	//执行周期
-	period       time.Duration
+	Interval time.Duration
 	// started or this entry's schedule is unsatisfiable
 	// The next time the job will run. This is the zero time if Cron has not been
 	NextTime time.Time
@@ -71,17 +71,17 @@ func (s byTime) Less(i, j int) bool {
 }
 
 func (t *Entry) Next() {
-	if t.NextTime.IsZero(){
+	if t.NextTime.IsZero() {
 		if t.setStartTime.Before(time.Now()) {
 			dur := time.Now().Sub(t.setStartTime)
-			cnt := dur.Nanoseconds() / t.period.Nanoseconds()
-			t.NextTime = t.setStartTime.Add(time.Duration((cnt+1) * t.period.Nanoseconds()))
-		}else {
-			//t.NextTime = t.setStartTime.Add(t.period)
+			cnt := dur.Nanoseconds() / t.Interval.Nanoseconds()
+			t.NextTime = t.setStartTime.Add(time.Duration((cnt + 1) * t.Interval.Nanoseconds()))
+		} else {
+			//t.NextTime = t.setStartTime.Add(t.Interval)
 			t.NextTime = t.setStartTime
 		}
-	}else {
-		t.NextTime = t.NextTime.Add(t.period)
+	} else {
+		t.NextTime = t.NextTime.Add(t.Interval)
 	}
 }
 
@@ -103,13 +103,13 @@ type FuncJob func()
 func (f FuncJob) Run() { f() }
 
 // AddFunc adds a func to the Cron to be run on the given schedule.
-func (c *Cron) AddFunc(startTime time.Time, period time.Duration, cmd func(), name string) {
-	c.AddJob(startTime, period, FuncJob(cmd), name)
+func (c *Cron) AddFunc(startTime time.Time, Interval time.Duration, cmd func(), name string) {
+	c.AddJob(startTime, Interval, FuncJob(cmd), name)
 }
 
 // AddFunc adds a Job to the Cron to be run on the given schedule.
-func (c *Cron) AddJob(startTime time.Time, period time.Duration, cmd Job, name string) {
-	c.Schedule(startTime, period, cmd, name)
+func (c *Cron) AddJob(startTime time.Time, Interval time.Duration, cmd Job, name string) {
+	c.Schedule(startTime, Interval, cmd, name)
 }
 
 // RemoveJob removes a Job from the Cron based on name.
@@ -138,12 +138,12 @@ func (entrySlice entries) pos(name string) int {
 }
 
 // Schedule adds a Job to the Cron to be run on the given schedule.
-func (c *Cron) Schedule(startTime time.Time, period time.Duration, cmd Job, name string) {
+func (c *Cron) Schedule(startTime time.Time, Interval time.Duration, cmd Job, name string) {
 	entry := &Entry{
-		setStartTime:	  		startTime,
-		period:					period,
-		Job:      				cmd,
-		Name:     				name,
+		setStartTime: startTime,
+		Interval:     Interval,
+		Job:          cmd,
+		Name:         name,
 	}
 
 	if !c.running {
@@ -201,7 +201,7 @@ func (c *Cron) run() {
 		case now = <-time.After(effective.Sub(now)):
 			// Run every entry whose next time was this effective time.
 			for _, e := range c.entries {
-				if !e.NextTime.Round(time.Second).Equal(effective.Round(time.Second)){
+				if !e.NextTime.Round(time.Second).Equal(effective.Round(time.Second)) {
 					break
 				}
 				go e.Job.Run()
@@ -251,11 +251,11 @@ func (c *Cron) entrySnapshot() []*Entry {
 	entries := []*Entry{}
 	for _, e := range c.entries {
 		entries = append(entries, &Entry{
-			setStartTime: 	e.setStartTime,
-			NextTime: 		e.NextTime,
-			period:   		e.period,
-			Job:      		e.Job,
-			Name:     		e.Name,
+			setStartTime: e.setStartTime,
+			NextTime:     e.NextTime,
+			Interval:     e.Interval,
+			Job:          e.Job,
+			Name:         e.Name,
 		})
 	}
 	return entries
