@@ -17,7 +17,7 @@ drumstick: https://github.com/openex27/drumstick <br>
         cron.Start()
         defer cron.Stop()
     
-        // Give cron 2 seconds to run our job (which is always activated).
+        // Give cron 20 seconds to run our job (which is always activated).
         select {
         case <-time.After(20*ONE_SECOND):
         }
